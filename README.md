@@ -4,7 +4,7 @@ Mise en place du projet:
 >git clone https://github.com/CryptoRobotFr/cBot-Project.git
 
 Installation des dépendances:  
->install -r requirements.txt  
+>pip install -r requirements.txt  
 
 Utilisation d'un environnement virtuel (recommandé):  
 >python -m venv .venv  
