@@ -12,9 +12,9 @@ now = datetime.now()
 print(now.strftime("%d-%m %H:%M:%S"))
 
 ftx = SpotFtx(
-        apiKey='aMDI5i6-pI8E6mzk2F6B3zoTYDlH5mZJnQ8IT0C2',
-        secret='l7ZXlHbPEIEA468o5gBXcZQRww27RXBvv8IXr8V5',
-        subAccountName='Ytb-Tester'
+        apiKey='',
+        secret='',
+        subAccountName=''
     )
 
 pairList = [
