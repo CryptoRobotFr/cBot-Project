@@ -78,6 +78,8 @@ for coin in dfList:
     dfList[coin]['AO']= ta.momentum.awesome_oscillator(df['high'],df['low'],window1=aoParam1,window2=aoParam2)
     dfList[coin]['STOCH_RSI'] = ta.momentum.stochrsi(close=df['close'], window=stochWindow)
     dfList[coin]['WillR'] = ta.momentum.williams_r(high=df['high'], low=df['low'], close=df['close'], lbp=willWindow)
+    dfList[coin]['EMA100'] =ta.trend.ema_indicator(close=df['close'], window=100)
+    dfList[coin]['EMA200'] =ta.trend.ema_indicator(close=df['close'], window=200)
 
 print("Data and Indicators loaded 100%")
 
@@ -85,7 +87,9 @@ print("Data and Indicators loaded 100%")
 def buyCondition(row, previousRow=None):
     if (
         row['AO'] >= 0
-        # and row['WillR'] < willOverSold
+        and previousRow['AO'] > row['AO']
+        and row['WillR'] < willOverSold
+        and row['EMA100'] > row['EMA200']
     ):
         return True
     else:
@@ -116,7 +120,7 @@ openPositions = len(coinPositionList)
 
 #Sell
 for coin in coinPositionList:
-        if sellCondition(dfList[coin].iloc[-2]) == True:
+        if sellCondition(dfList[coin].iloc[-2], dfList[coin].iloc[-3]) == True:
             openPositions -= 1
             symbol = coin+'/USD'
             cancel = ftx.cancel_all_open_order(symbol)
@@ -131,7 +135,7 @@ for coin in coinPositionList:
 if openPositions < maxOpenPosition:
     for coin in dfList:
         if coin not in coinPositionList:
-            if buyCondition(dfList[coin].iloc[-2]) == True and openPositions < maxOpenPosition:
+            if buyCondition(dfList[coin].iloc[-2], dfList[coin].iloc[-3]) == True and openPositions < maxOpenPosition:
                 time.sleep(1)
                 usdBalance = ftx.get_balance_of_one_coin('USD')
                 symbol = coin+'/USD'
