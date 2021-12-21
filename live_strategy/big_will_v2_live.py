@@ -1,5 +1,5 @@
 import sys
-sys.path.append('./cBot-project/utilities')
+sys.path.append('cBot-project/utilities')
 from custom_indicators import CustomIndocators as ci
 from spot_ftx import SpotFtx
 import pandas as pd
@@ -57,12 +57,12 @@ stochWindow = 14
 willWindow = 14
 
 # -- Hyper parameters --
-maxOpenPosition = 4
+maxOpenPosition = 3
 stochOverBought = 0.8
 stochOverSold = 0.2
 willOverSold = -85
 willOverBought = -10
-TpPct = 0.07
+TpPct = 0.15
 
 dfList = {}
 for pair in pairList:
