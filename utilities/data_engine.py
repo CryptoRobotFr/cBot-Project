@@ -114,8 +114,9 @@ class DataEngine():
         '''
         for symbol in symbols:
             for tf in timeframes:
+                print(f'-> downloding symbol {symbol} for timeframe {tf}')
                 df = self.get_historical_from_api(symbol=symbol, timeframe=tf, start_date=start_date)
-                if len(df) > 0:
+                if df is not None and len(df) > 0:
                     try:
                         fileName = self.path_to_data+self.exchange_name+'/'+tf+'/'+symbol.replace('/','')+'.p'
                         if os.path.exists(fileName):
@@ -127,6 +128,8 @@ class DataEngine():
                     except:
                         pass
                         print('Error on', symbol)
+                else:
+                    print('Error empty dataframe on', symbol)
 
     def update_data(self, symbols, timeframes):
         '''
