@@ -67,7 +67,7 @@ TpPct = 0.15
 dfList = {}
 for pair in pairList:
     # print(pair)
-    df = ftx.get_last_historical(pair, timeframe, 100)
+    df = ftx.get_last_historical(pair, timeframe, 210)
     dfList[pair.replace('/USD','')] = df
 
 for coin in dfList:
