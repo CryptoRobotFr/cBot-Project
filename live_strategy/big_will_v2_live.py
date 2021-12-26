@@ -1,5 +1,5 @@
 import sys
-sys.path.append('cBot-project/utilities')
+sys.path.append('cBot-Project/utilities')
 from custom_indicators import CustomIndocators as ci
 from spot_ftx import SpotFtx
 import pandas as pd
