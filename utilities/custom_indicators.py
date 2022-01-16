@@ -106,3 +106,16 @@ class CustomIndocators():
         df['HA_High']=df[['HA_Open','HA_Close','high']].max(axis=1)
         df['HA_Low']=df[['HA_Open','HA_Close','low']].min(axis=1)
         return df
+
+    def volume_anomality(df, volume_window=10):
+        dfInd = df.copy()
+        dfInd["VolAnomaly"] = 0
+        dfInd["PreviousClose"] = dfInd["close"].shift(1)
+        dfInd['MeanVolume'] = dfInd['volume'].rolling(volume_window).mean()
+        dfInd['MaxVolume'] = dfInd['volume'].rolling(volume_window).max()
+        dfInd.loc[dfInd['volume'] > 1.5 * dfInd['MeanVolume'], "VolAnomaly"] = 1
+        dfInd.loc[dfInd['volume'] > 2 * dfInd['MeanVolume'], "VolAnomaly"] = 2
+        dfInd.loc[dfInd['volume'] >= dfInd['MaxVolume'], "VolAnomaly"] = 3
+        dfInd.loc[dfInd['PreviousClose'] > dfInd['close'],
+                "VolAnomaly"] = (-1) * dfInd["VolAnomaly"]
+        return dfInd["VolAnomaly"]
