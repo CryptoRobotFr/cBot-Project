@@ -1,52 +1,48 @@
+import os
 import sys
-sys.path.append('cBot-Project/utilities')
-from custom_indicators import CustomIndocators as ci
-from spot_ftx import SpotFtx
-import pandas as pd
+sys.path.append(os.path.dirname(sys.argv[0])+'/..')
+from utilities.spot_ftx import SpotFtx
+from utilities.bot_logging import BotLogging
+from utilities.conf_loader import ConfLoader
 import ta
-import ccxt
+import json
 from datetime import datetime
 import time
+
+
+with open(os.path.dirname(sys.argv[0])+'/../config/config.json', 'r') as fconfig:
+    configJson = json.load(fconfig)
+    config = ConfLoader(configJson)
+
+with open(os.path.dirname(sys.argv[0])+'/../database/pair_list.json', 'r') as fpairJson:
+    pairJson = json.load(fpairJson)
+    fpairJson.close()
+    
+pairList = pairJson['ftxBglacialPair']
+
+ftx = SpotFtx(
+    apiKey=config.strategies.will.apiKey,
+    secret=config.strategies.will.secret,
+    subAccountName=config.strategies.will.subAccountName
+)
+
+logger = BotLogging(
+    config.strategies.will.messaging.webhook,
+    config.strategies.will.messaging.username
+)
+
+logger_debug = BotLogging(
+    config.strategies.will.messaging.webhookDebug,
+    config.strategies.will.messaging.username
+)
 
 now = datetime.now()
 print(now.strftime("%d-%m %H:%M:%S"))
 
-ftx = SpotFtx(
-        apiKey='',
-        secret='',
-        subAccountName=''
-    )
-
-pairList = [
-    'BTC/USD',
-    'ETH/USD',
-    'BNB/USD',
-    'LTC/USD',
-    'DOGE/USD',
-    'XRP/USD',
-    'SOL/USD',
-    'AVAX/USD',
-    'SHIB/USD',
-    'LINK/USD',
-    'UNI/USD',
-    'MATIC/USD',
-    'AXS/USD',
-    'CRO/USD',
-    'FTT/USD',
-    'TRX/USD',
-    'BCH/USD',
-    'FTM/USD',
-    'GRT/USD',
-    'AAVE/USD',
-    'OMG/USD',
-    'SUSHI/USD',
-    'MANA/USD',
-    'SRM/USD',
-    'RUNE/USD',
-    'SAND/USD',
-    'CHZ/USD',
-    'CRV/USD'
-]
+logger_debug.send_message("Starting bot {} at {}".format(
+    config.strategies.will.subAccountName,
+    now.strftime("%d-%m %H:%M:%S"))
+)
 
 timeframe = '1h'
 
@@ -57,7 +53,7 @@ stochWindow = 14
 willWindow = 14
 
 # -- Hyper parameters --
-maxOpenPosition = 3
+maxOpenPosition = 4
 stochOverBought = 0.8
 stochOverSold = 0.2
 willOverSold = -85
@@ -80,7 +76,7 @@ for coin in dfList:
     dfList[coin]['WillR'] = ta.momentum.williams_r(high=dfList[coin]['high'], low=dfList[coin]['low'], close=dfList[coin]['close'], lbp=willWindow)
     dfList[coin]['EMA100'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=100)
     dfList[coin]['EMA200'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=200)
-        
+
 print("Data and Indicators loaded 100%")
 
 # -- Condition to BUY market --
@@ -120,12 +116,16 @@ openPositions = len(coinPositionList)
 
 #Sell
 for coin in coinPositionList:
-        if sellCondition(dfList[coin].iloc[-2], dfList[coin].iloc[-3]) == True:
+        if sellCondition(dfList[coin].iloc[-1], dfList[coin].iloc[-2]) == True:
             openPositions -= 1
             symbol = coin+'/USD'
+            print(symbol)
             cancel = ftx.cancel_all_open_order(symbol)
             time.sleep(1)
             sell = ftx.place_market_order(symbol,'sell',coinBalance[coin])
+            logger.send_message(
+                'Sending SELL {} of {} order'.format(coinBalance[coin], symbol)
+            )
             print(cancel)
             print("Sell", coinBalance[coin], coin, sell)
         else:
@@ -135,7 +135,7 @@ for coin in coinPositionList:
 if openPositions < maxOpenPosition:
     for coin in dfList:
         if coin not in coinPositionList:
-            if buyCondition(dfList[coin].iloc[-2], dfList[coin].iloc[-3]) == True and openPositions < maxOpenPosition:
+            if buyCondition(dfList[coin].iloc[-1], dfList[coin].iloc[-2]) == True and openPositions < maxOpenPosition:
                 time.sleep(1)
                 usdBalance = ftx.get_balance_of_one_coin('USD')
                 symbol = coin+'/USD'
@@ -150,15 +150,19 @@ if openPositions < maxOpenPosition:
                 buyAmount = ftx.convert_amount_to_precision(symbol, buyQuantityInUsd/buyPrice)
 
                 buy = ftx.place_market_order(symbol,'buy',buyAmount)
-                time.sleep(2)
-                tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
-                try:
-                    tp["id"]
-                except:
+                logger.send_message(
+                    'Sending BUY {} of {} order at {} price'.format(buyAmount, symbol, buyPrice)
+                )
+                print("Buy",buyAmount,coin,'at',buyPrice,buy)
+                if config.strategies.will.options.tpEnabled:
                     time.sleep(2)
                     tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
-                    pass
-                print("Buy",buyAmount,coin,'at',buyPrice,buy)
-                print("Place",buyAmount,coin,"TP at",tpPrice, tp)
+                    try:
+                        tp["id"]
+                    except:
+                        time.sleep(2)
+                        tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
+                        pass
+                    print("Place",buyAmount,coin,"TP at",tpPrice, tp)
 
                 openPositions += 1
