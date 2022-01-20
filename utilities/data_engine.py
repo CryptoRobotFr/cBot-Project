@@ -118,6 +118,10 @@ class DataEngine():
                 df = self.get_historical_from_api(symbol=symbol, timeframe=tf, start_date=start_date)
                 if df is not None and len(df) > 0:
                     try:
+                        if not os.path.isdir(self.path_to_data+self.exchange_name):
+                            os.mkdir(self.path_to_data+self.exchange_name)
+                        if not os.path.isdir(self.path_to_data+self.exchange_name+'/'+tf):
+                            os.mkdir(self.path_to_data+self.exchange_name+'/'+tf)
                         fileName = self.path_to_data+self.exchange_name+'/'+tf+'/'+symbol.replace('/','')+'.p'
                         if os.path.exists(fileName):
                             os.remove(fileName)
