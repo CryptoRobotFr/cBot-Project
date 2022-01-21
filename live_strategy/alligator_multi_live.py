@@ -21,26 +21,26 @@ with open(os.path.dirname(sys.argv[0])+'/../database/pair_list.json', 'r') as fp
 pairList = pairJson['ftxBglacialPair']
 
 ftx = SpotFtx(
-    apiKey=config.strategies.aligator.apiKey,
-    secret=config.strategies.aligator.secret,
-    subAccountName=config.strategies.aligator.subAccountName
+    apiKey=config.strategies.alligator.apiKey,
+    secret=config.strategies.alligator.secret,
+    subAccountName=config.strategies.alligator.subAccountName
 )
 
 logger = BotLogging(
-    config.strategies.aligator.messaging.webhook,
-    config.strategies.aligator.messaging.username
+    config.strategies.alligator.messaging.webhook,
+    config.strategies.alligator.messaging.username
 )
 
 logger_debug = BotLogging(
-    config.strategies.aligator.messaging.webhookDebug,
-    config.strategies.aligator.messaging.username
+    config.strategies.alligator.messaging.webhookDebug,
+    config.strategies.alligator.messaging.username
 )
 
 now = datetime.now()
 print(now.strftime("%d-%m %H:%M:%S"))
 
 logger_debug.send_message("Starting bot {} at {}".format(
-    config.strategies.aligator.subAccountName,
+    config.strategies.alligator.subAccountName,
     now.strftime("%d-%m %H:%M:%S"))
 )
 
@@ -156,7 +156,7 @@ if openPositions < maxOpenPosition:
                     'Sending BUY {} of {} order at {} price'.format(buyAmount, symbol, buyPrice)
                 )
                 print("Buy", buyAmount, coin, 'at', buyPrice, buy)
-                if config.strategies.aligator.options.tpEnabled:
+                if config.strategies.alligator.options.tpEnabled:
                     time.sleep(2)
                     tp = ftx.place_limit_order(symbol, 'sell', buyAmount, tpPrice)
                     try:
