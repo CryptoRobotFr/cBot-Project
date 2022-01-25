@@ -1,15 +1,31 @@
 # cBot-Project  
 
-Mise en place du projet:  
->git clone https://github.com/CryptoRobotFr/cBot-Project.git
+## Mise en place du projet:  
+```bash
+git clone https://github.com/CryptoRobotFr/cBot-Project.git
+```
 
-Installation des dépendances:  
->pip install -r requirements.txt  
+## Installation des dépendances:  
+```bash
+pip install -r requirements.txt  
+```
 
-Utilisation d'un environnement virtuel (recommandé):  
->python -m venv .venv  
+## Utilisation d'un environnement virtuel (recommandé):  
+
+### Windows
+```PowerShell
+python -m venv .venv  
 .venv\Scripts\activate  
 pip install -r .\requirements.txt  
+```
+
+### Linux/MacOS
+```bash
+python -m venv .venv  
+source .venv/bin/activate 
+pip install -r ./requirements.txt  
+```
+
 
 Si vous souhaitez nous soutenir financièrement pour le développement des projets CryptoRobot voici une adresse de donnation:  
 
