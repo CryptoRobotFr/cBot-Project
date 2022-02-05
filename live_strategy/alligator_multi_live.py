@@ -44,6 +44,20 @@ logger_debug.send_message("Starting bot {} at {}".format(
     now.strftime("%d-%m %H:%M:%S"))
 )
 
+coinBalance = ftx.get_all_balance()
+coinInUsd = ftx.get_all_balance_in('USD')
+usdBalance = coinBalance['USD']
+del coinBalance['USD']
+del coinInUsd['USD']
+totalBalanceInUsd = usdBalance + sum(coinInUsd.values())
+coinPositionList = []
+for coin in coinInUsd:
+    if coinInUsd[coin] > 0.05 * totalBalanceInUsd:
+        coinPositionList.append(coin)
+openPositions = len(coinPositionList)
+
+logger_debug.send_message("Total wallet value: {}$".format(totalBalanceInUsd))
+
 timeframe = '1h'
 
 # -- Indicator variable --
@@ -61,7 +75,7 @@ TpPct = 0.15
 dfList = {}
 for pair in pairList:
     # print(pair)
-    df = ftx.get_last_historical(pair, timeframe, 210)
+    df = ftx.get_last_historical(pair, timeframe, 1000)
     dfList[pair.replace('/USD', '')] = df
 
 for coin in dfList:
@@ -70,12 +84,12 @@ for coin in dfList:
 
     # -- Indicators, you can edit every value --
 
-    dfList[coin]['EMA1'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=7)
-    dfList[coin]['EMA2'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=30)
-    dfList[coin]['EMA3'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=50)
-    dfList[coin]['EMA4'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=100)
-    dfList[coin]['EMA5'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=121)
-    dfList[coin]['EMA6'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=200)
+    dfList[coin]['EMA7'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=7)
+    dfList[coin]['EMA30'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=30)
+    dfList[coin]['EMA50'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=50)
+    dfList[coin]['EMA100'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=100)
+    dfList[coin]['EMA121'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=121)
+    dfList[coin]['EMA200'] = ta.trend.ema_indicator(close=dfList[coin]['close'], window=200)
 
     dfList[coin]['STOCH_RSI'] = ta.momentum.stochrsi(close=dfList[coin]['close'], window=stochWindow, smooth1=3,
                                                      smooth2=3)
@@ -88,9 +102,8 @@ print("Data and Indicators loaded 100%")
 # -- Condition to BUY market --
 def buyCondition(row, previousRow=None):
     if (
-            row['EMA1'] > row['EMA2'] and row['EMA2'] > row['EMA3'] and row['EMA3'] > row['EMA4'] and row['EMA4'] > row[
-        'EMA5'] and row['EMA5'] > row['EMA6']
-            # and (row['STOCH_RSI']<0.82 or row['WillR'] < willOverSold)
+            row['EMA7'] > row['EMA30'] and row['EMA30'] > row['EMA50'] and row['EMA50'] > row['EMA100'] and row['EMA100'] > row[
+        'EMA121'] and row['EMA121'] > row['EMA200']
     ):
         return True
     else:
@@ -99,23 +112,10 @@ def buyCondition(row, previousRow=None):
 
 # -- Condition to SELL market --
 def sellCondition(row, previousRow=None):
-    if row['EMA2'] > row['EMA1'] and (row['STOCH_RSI'] > 0.2 or row['WillR'] > willOverBought):
+    if row['EMA30'] > row['EMA7'] and (row['STOCH_RSI'] > 0.2 or row['WillR'] > willOverBought):
         return True
     else:
         return False
-
-
-coinBalance = ftx.get_all_balance()
-coinInUsd = ftx.get_all_balance_in_usd()
-usdBalance = coinBalance['USD']
-del coinBalance['USD']
-del coinInUsd['USD']
-totalBalanceInUsd = usdBalance + sum(coinInUsd.values())
-coinPositionList = []
-for coin in coinInUsd:
-    if coinInUsd[coin] > 0.05 * totalBalanceInUsd:
-        coinPositionList.append(coin)
-openPositions = len(coinPositionList)
 
 # Sell
 for coin in coinPositionList:
@@ -125,8 +125,9 @@ for coin in coinPositionList:
         cancel = ftx.cancel_all_open_order(symbol)
         time.sleep(1)
         sell = ftx.place_market_order(symbol, 'sell', coinBalance[coin])
+        sellPrice = float(ftx.convert_price_to_precision(symbol, ftx.get_bid_ask_price(symbol)['ask']))
         logger.send_message(
-            'Sending SELL {} of {} order'.format(coinBalance[coin], symbol)
+            'Sending SELL {} of {} order at {} price'.format(coinBalance[coin], symbol, sellPrice)
         )
         print(cancel)
         print("Sell", coinBalance[coin], coin, sell)

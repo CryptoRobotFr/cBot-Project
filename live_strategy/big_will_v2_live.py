@@ -43,6 +43,20 @@ logger_debug.send_message("Starting bot {} at {}".format(
     config.strategies.will.subAccountName,
     now.strftime("%d-%m %H:%M:%S"))
 )
+    
+coinBalance = ftx.get_all_balance()
+coinInUsd = ftx.get_all_balance_in('USD')
+usdBalance = coinBalance['USD']
+del coinBalance['USD']
+del coinInUsd['USD']
+totalBalanceInUsd = usdBalance + sum(coinInUsd.values())
+coinPositionList = []
+for coin in coinInUsd:
+    if coinInUsd[coin] > 0.05 * totalBalanceInUsd:
+        coinPositionList.append(coin)
+openPositions = len(coinPositionList)
+
+logger_debug.send_message("Total wallet value: {}$".format(totalBalanceInUsd))
 
 timeframe = '1h'
 
@@ -63,7 +77,7 @@ TpPct = 0.15
 dfList = {}
 for pair in pairList:
     # print(pair)
-    df = ftx.get_last_historical(pair, timeframe, 210)
+    df = ftx.get_last_historical(pair, timeframe, 400)
     dfList[pair.replace('/USD','')] = df
 
 for coin in dfList:
@@ -101,18 +115,6 @@ def sellCondition(row, previousRow=None):
         return True
     else:
         return False
-    
-coinBalance = ftx.get_all_balance()
-coinInUsd = ftx.get_all_balance_in_usd()
-usdBalance = coinBalance['USD']
-del coinBalance['USD']
-del coinInUsd['USD']
-totalBalanceInUsd = usdBalance + sum(coinInUsd.values())
-coinPositionList = []
-for coin in coinInUsd:
-    if coinInUsd[coin] > 0.05 * totalBalanceInUsd:
-        coinPositionList.append(coin)
-openPositions = len(coinPositionList)
 
 #Sell
 for coin in coinPositionList:
@@ -123,8 +125,9 @@ for coin in coinPositionList:
             cancel = ftx.cancel_all_open_order(symbol)
             time.sleep(1)
             sell = ftx.place_market_order(symbol,'sell',coinBalance[coin])
+            sellPrice = float(ftx.convert_price_to_precision(symbol, ftx.get_bid_ask_price(symbol)['ask']))
             logger.send_message(
-                'Sending SELL {} of {} order'.format(coinBalance[coin], symbol)
+                'Sending SELL {} of {} order at {} price'.format(coinBalance[coin], symbol, sellPrice)
             )
             print(cancel)
             print("Sell", coinBalance[coin], coin, sell)
