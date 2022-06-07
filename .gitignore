@@ -127,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Config file
+config/config.json
+
+# Live pair list
+database/pair_list.json
+
+# Databases files
+**.p
+
+# Ide files
+.vscode
+.idea

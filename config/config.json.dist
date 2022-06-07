@@ -1,0 +1,30 @@
+{
+    "strategies": {
+        "alligator": {
+            "apiKey": "",
+            "secret": "",
+            "subAccountName": "",
+            "messaging":{
+                "username": "",
+                "webhook":"",
+                "webhookDebug":""
+            },
+            "options":{
+                "tpEnabled": false
+            }
+        },
+        "will": {
+            "apiKey": "",
+            "secret": "",
+            "subAccountName": "",
+            "messaging":{
+                "username": "",
+                "webhook":"",
+                "webhookDebug":""
+            },
+            "options":{
+                "tpEnabled": false
+            }
+        }
+    }
+}
