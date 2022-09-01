@@ -6,10 +6,10 @@ import pandas as pd
 import ta
 import ccxt
 from datetime import datetime
-import time
+import pytz, time
 
-now = datetime.now()
-print(now.strftime("%d-%m %H:%M:%S"))
+now = datetime.now(pytz.timezone('Europe/Paris'))
+print(now.strftime("%d-%m-%Y %H:%M:%S"))
 
 ftx = SpotFtx(
         apiKey='',
